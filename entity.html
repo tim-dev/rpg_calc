@@ -1,0 +1,17 @@
+<div class="pull-left entity-small animated" ng-click="click(entity)">
+  <div class="header">
+    <div class="pull-right"><i class="icon icon-remove" ng-click="$parent.remove_entity($event, entity)"></i></div>
+    {{ entity.name }}
+  </div>
+  <div>HP: 
+    <span class="{{ hit_point_color() }}">{{ entity.cur_hit_points }}</span>
+    / {{ entity.max_hit_points }}
+  </div>
+  <div>AC: {{ entity.armor_class }}</div>
+  <div>
+    <div class="pull-right" style="margin-right:-0.5em;">
+      <i ng-click="$parent.edit_entity($event, entity)" class="icon icon-large icon-wrench"></i>
+    </div>
+    DR: {{ entity.armor_reduction }}
+  </div>
+</div>
