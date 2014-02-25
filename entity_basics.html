@@ -1,0 +1,38 @@
+<div>
+
+  <form class="form-horizontal">
+
+    <div class="control-group">
+      <label class="control-label">Name</label>
+      <div class="controls">
+        <input type="text" class="input-small" ng-model="entity.name" placeholder="Name"></input>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" title="Hit points">HP</label>
+      <div class="controls">
+        <input type="number" class="input-mini" ng-model="entity.cur_hit_points"></input>
+        <span>/</span>
+        <input type="number" class="input-mini" ng-model="entity.max_hit_points"></input>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" title="Armor class">AC</label>
+      <div class="controls">
+        <input type="number" class="input-mini" ng-model="entity.armor_class"></input>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" title="Damage resistance">DR</label>
+      <div class="controls">
+        <input type="number" class="input-mini" ng-model="entity.armor_reduction"></input>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+

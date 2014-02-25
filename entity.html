@@ -1,6 +1,18 @@
-<div class="pull-left entity-small animated" ng-click="click(entity)">
+<div 
+  class="pull-left entity-small animated {{ hit_point_color() }}" 
+  style="background-size: {{ entity.cur_hit_points / entity.max_hit_points * 100}}% 100% !important"
+>
+  {{ entity.name }}
+  <div class="hp-overlay">
+    {{ entity.cur_hit_points }} / {{ entity.max_hit_points }}
+  </div>
+  <div class="actions">
+    <i ng-click="$parent.edit_entity($event, entity)" class="fa fa-lg fa-wrench"></i>
+    <i class="fa fa-times" ng-click="$parent.remove_entity($event, entity)"></i>
+  </div>
+  <!--
   <div class="header">
-    <div class="pull-right"><i class="icon icon-remove" ng-click="$parent.remove_entity($event, entity)"></i></div>
+    <div class="pull-right"><i class="fa fa-times" ng-click="$parent.remove_entity($event, entity)"></i></div>
     {{ entity.name }}
   </div>
   <div>HP: 
@@ -10,8 +22,9 @@
   <div>AC: {{ entity.armor_class }}</div>
   <div>
     <div class="pull-right" style="margin-right:-0.5em;">
-      <i ng-click="$parent.edit_entity($event, entity)" class="icon icon-large icon-wrench"></i>
+      <i ng-click="$parent.edit_entity($event, entity)" class="fa fa-lg fa-wrench"></i>
     </div>
     DR: {{ entity.armor_reduction }}
   </div>
+  -->
 </div>

@@ -1,0 +1,108 @@
+<div class="modal hide fade" id="entity_modal">
+
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>Editing {{ entity.name }}</h3>
+  </div>
+
+  <div class="modal-body">
+
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#entity_modal_basics" data-toggle="tab">Basics</a></li>
+      <li><a href="#entity_modal_weapons" data-toggle="tab">Weapons</a></li>
+      <li><a href="#entity_modal_checks" data-toggle="tab">Checks</a></li>
+    </ul>
+
+    <div class="tab-content">
+
+      <entitybasics entity="entity" class="tab-pane active fade in" id="entity_modal_basics"></entitybasics>
+
+      <div class="tab-pane fade" id="entity_modal_weapons">
+        <table class="table table-condensed table-4-col">
+
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Attack bonus</th>
+              <th>Damage</th>
+              <th>Critical</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr ng-repeat="weapon in entity.weapons">
+
+              <td>
+                <i class="fa fa-minus-square" ng-click="entity.weapons.splice($index, 1)"></i>
+                <input type="text" class="input-small" ng-model="weapon.name" />
+              </td>
+
+              <td>
+                <input type="text" class="input-small" ng-model="weapon.attack_bonus" ng-change="fix_hit_dice(weapon)" placeholder="ex: 4"/>
+              </td>
+
+              <td>
+                <input type="text" class="input-small" ng-model="weapon.damage" placeholder="ex: 1d8+1"/>
+              </td>
+
+              <td>
+                <input type="text" class="input-small" ng-model="weapon.critical" placeholder="ex: x2"/>
+              </td>
+
+            </tr>
+
+          </tbody>
+        </table>
+
+        <button class="btn" ng-click="add_weapon()">Add weapon
+        </button>
+
+      </div>
+
+      <div class="tab-pane fade" id="entity_modal_checks">
+
+        <form class="form-horizontal">
+
+          <div class="control-group">
+            <label class="control-label">Listen</label>
+            <div class="controls">
+              <input type="text" class="input-small" ng-model="entity.checks.listen"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Spot</label>
+            <div class="controls">
+              <input type="text" class="input-small" ng-model="entity.checks.spot"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Fortitude</label>
+            <div class="controls">
+              <input type="text" class="input-small" ng-model="entity.checks.fortitude"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Reflex</label>
+            <div class="controls">
+              <input type="text" class="input-small" ng-model="entity.checks.reflex"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Will</label>
+            <div class="controls">
+              <input type="text" class="input-small" ng-model="entity.checks.will"></input>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+</div>

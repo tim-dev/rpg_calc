@@ -1,42 +1,169 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="app">
 <head>
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" />
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" >
-<link rel="stylesheet" href="animate.min.css" />
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" />
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" >
+<link rel="stylesheet" href="external/animate.min.css" />
 <link rel="stylesheet" href="core.css" />
-<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+<script src="external/FileSaver.js"></script>
 <script src="core.js"></script>
 </head>
 <body ng-controller="MainController" ng-class="{ crosshair: attacker }">
   <!-- 
+  HEADER 
+  -->
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="pull-right">
+        <select name="ruleset" ng-model="ruleset" style="margin:5px 10px 0 0">
+          <option value="d&d">Dungeons &amp; Dragons</option>
+          <option value="got">Game of Thrones</option>
+        </select>
+      </div>
+      <ul class="nav">
+        <li>
+          <a href="#"
+            ng-click="add_entity()" 
+            data-toggle="modal" 
+            data-target="#entity_modal">
+            <i class="fa fa-users"></i> New character
+          </a>
+        </li>
+        <li><a href="#" ng-click="save()"><i class="fa fa-download"></i> Save</a>
+        <li><a href="#" ng-click="load()"><i class="fa fa-folder-open"></i> Load</a>
+        <li>
+          <a href="#" 
+            data-toggle="modal" 
+            data-target="#check_modal">
+            <i class="fa fa-bullseye"></i> Checks
+          </a>
+        </li>
+      </ul>
+      <div class="hide">
+        <input type="file" id="load_file" />
+      </div>
+    </div>
+  </div>
+  <!-- 
   ==============================
   ATTACK MODAL 
   ==============================
+  &#10518; - Arrow
+  &#9876; - Swords
   -->
+
   <div class="modal hide fade" id="attack_modal">
     
     <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      <button 
+        type="button" 
+        class="close" 
+        data-dismiss="modal" 
+        aria-hidden="true">
+      &times;
+      </button>
       <h3>{{ attacker.name }} vs. {{ defender.name }}</h3>
     </div>
 
+    <form ng-submit="do_attack()">
     <div class="modal-body">
+      <select 
+        ng-model="attacker.chosen_weapon"
+        ng-options="weapon.name for weapon in attacker.weapons">
+      </select>
       <p>All this information is optional</p>
-      <form>
         <label>Roll</label>
-        <input type="number" class="input-small" ng-model="attack_options.roll"></input>
+        <input 
+          name="custom_roll"
+          type="number" 
+          class="input-small" 
+          ng-model="attack_options.roll">
+        </input>
         <label>Temp attack modifier</label>
-        <input type="number" class="input-small" ng-model="attack_options.hit_modifier"></input>
-      </form>
+        <input 
+          type="number" 
+          class="input-small" 
+          ng-model="attack_options.hit_modifier">
+        </input>
+        <!--
+        <label>Temp damage modifier</label>
+        -->
     </div>
 
     <div class="modal-footer">
       <a href="#" data-dismiss="modal" class="btn" ng-click="clear_attack()">Cancel</a>
-      <a href="#" data-dismiss="modal" class="btn btn-primary" ng-click="do_attack()">Attack!</a>
+      <input type="submit" class="btn btn-primary" value="Attack!"/>
+    </div>
+    </form>
+  </div>
+  <!-- 
+  ==============================
+  CHECK MODAL 
+  ==============================
+  -->
+  <div class="modal hide fade" id="check_modal">
+    
+    <div class="modal-header">
+      <button 
+        type="button" 
+        class="close" 
+        data-dismiss="modal" 
+        aria-hidden="true">
+      &times;
+      </button>
+      <h3>Checks</h3>
+    </div>
+
+    <div class="modal-body">
+      <form class="form-horizontal">
+
+        <div class="control-group">
+          <label class="control-label">Saved checks</label>
+          <div class="controls">
+            <select 
+              ng-model="$_current_check"
+              ng-change="angular.extend(current_check, $_current_check)"
+              ng-options="check.name for check in saved_checks">
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Name</label>
+          <div class="controls">
+          <input type="text" ng-model="current_check.name"/>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Check type</label>
+          <div class="controls">
+            <input type="text" ng-model="current_check.type"/>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Characters</label>
+          <div class="controls">
+            <select multiple
+              ng-model="current_check.entities" 
+              ng-change="console.log(current_check.entities)"
+              ng-options="e.name for e in entities">
+            </select>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <a href="#" data-dismiss="modal" class="btn btn-danger">Cancel</a>
+      <a href="#" class="btn" ng-click="save_check(current_check)"> Save</a>
+      <a href="#" data-dismiss="modal" class="btn btn-primary" ng-click="roll_check(current_check)">Roll checks</a>
     </div>
   </div>
 
@@ -45,110 +172,50 @@
   ENTITY MODAL 
   ==============================
   -->
-  <div class="modal hide fade" id="entity_modal">
+  <ddentity entity="editee" ng-if="ruleset == 'd&d'"></ddentity>
 
-    <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-      <h3>Editing {{ editee.name }}</h3>
-    </div>
+  <!--
+  BODY
+  -->
+  <div class="container-fluid">
 
-    <div class="modal-body">
-      <form class="form-horizontal">
-        <div class="control-group">
-          <label class="control-label">Name</label>
-          <div class="controls">
-            <input type="text" class="input-small" ng-model="editee.name" placeholder="Name"></input>
-          </div>
-        </div>
+    <div class="row-fluid">
 
-        <div class="control-group">
-          <label class="control-label" title="Hit points">HP</label>
-          <div class="controls">
-            <input type="number" class="input-mini" ng-model="editee.cur_hit_points"></input>
-            <span>/</span>
-            <input type="number" class="input-mini" ng-model="editee.max_hit_points"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label" title="Armor class">AC</label>
-          <div class="controls">
-            <input type="number" class="input-mini" ng-model="editee.armor_class"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label" title="Damage resistance">DR</label>
-          <div class="controls">
-            <input type="number" class="input-mini" ng-model="editee.armor_reduction"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label">Weapon hit dice</label>
-          <div class="controls">
-            <input type="text" class="input-mini" ng-model="editee.weapon_hit_dice"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label">Weapon damage</label>
-          <div class="controls">
-            <input type="text" class="input-mini" ng-model="editee.weapon_damage"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label">Bonus to hit</label>
-          <div class="controls">
-            <input type="number" class="input-mini" ng-model="editee.bonus_hit"></input>
-          </div>
-        </div>
-
-        <div class="control-group">
-          <label class="control-label">Bonus to damage</label>
-          <div class="controls">
-            <input type="number" class="input-mini" ng-model="editee.bonus_damage"></input>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-
-  <div class="container">
-
-    <div class="row">
+      <div class="span8">
+        <entity ng-repeat="entity in entities" 
+          entity="entity"
+          ng-class="{ slideInDown: entity.adding, slideOutUp: entity.removing, active: entity.uuid == $parent.attacker.uuid }" 
+        ></entity>
+      </div>
 
       <div class="span4">
         <div id="results">
-          <div ng-repeat="result in results" class="animated fadeIn" ng-switch on="result.hit">
-            <i class="icon-remove" ng-click="remove_attack(result)"></i> {{ result.attacker.name }} attacked {{ result.defender.name }}, 
-            <span ng-switch-when="true">hit and did {{ result.given_damage }} damage</span>
-            <span ng-switch-default>but missed</span>
+          <div ng-repeat="result in results" class="animated fadeIn" ng-switch on="result.type">
+
+            <div ng-switch-when="attack">
+              <div ng-switch on="result.hit">
+                <i class="fa fa-times" ng-click="remove_attack(result)"></i> {{ result.attacker.name }} attacked {{ result.defender.name }}, 
+                <span ng-switch-when="true">hit and did {{ result.given_damage }} damage</span>
+                <span ng-switch-default>but missed</span>
+              </div>
+            </div>
+
+            <div ng-switch-when="check">
+              
+              <i class="fa fa-times" ng-click="results.splice(results.indexOf(result), 1)"></i> {{ result.name }} check
+              <ul class="unstyled">
+                <li ng-repeat="c in result.checks">{{ c.roll }} - {{ c.name }}</li>
+              </ul>
+            </div>
+
           </div>
         </div>
       </div>
 
-      <div class="span8">
-        <div class="row-fluid" style="margin-bottom:10px;">
-          <button class="btn" ng-click="add_entity()" data-toggle="modal" data-target="#entity_modal">Add entity</button>
-          <select name="ruleset" ng-model="ruleset" style="margin:0">
-            <option value="d&d">Dungeons &amp; Dragons</option>
-            <option value="got">Game of Thrones</option>
-          </select>
-        </div>
-
-        <entity ng-repeat="entity in entities" 
-          entity="entity"
-          click="set_combatant"
-          ng-class="{ slideInDown: entity.adding, slideOutUp: entity.removing, active: entity.uuid == $parent.attacker.uuid }" 
-        ></entity>
-        <!--  -->
-        <!--  ng-click="set_combatant(entity)" -->
-      </div>
-
     </div>
+    <!--
+    <div style="background:blue;height:50px;width:50px;border-radius:100%;-webkit-border-radius:100%;">&nbsp;</div>
+    -->
 
   </div>
 </body>
