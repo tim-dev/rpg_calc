@@ -1,4 +1,7 @@
 
+String.prototype.toTitleCase = () ->
+    return this.replace /\w\S*/g, (txt) -> return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+
 uuid = () ->
     'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace /[xy]/g, (c) ->
         r = Math.random()*16|0
@@ -45,27 +48,23 @@ _roll_die = (dice) ->
 
 
 class Entity
+    @default_options =
+        name            : "New entity"
+        cur_hit_points  : 10
+        max_hit_points  : 10
+
+        armor_class     : 10
+        armor_reduction : 0
+
+        weapons         : []
+        checks          : {}
+
     constructor: (options={}) ->
-        for k, v of options
+        for k, v of angular.extend({}, Entity.default_options, options)
             this[k] = v
 
-        @name            or= "New entity"
-        @cur_hit_points  or= @max_hit_points or 10
-        @max_hit_points  or= @cur_hit_points
-
-        @armor_class     or= 10
-        @armor_reduction or= 0
-
-        @weapons         or= []
-        @weapons = @weapons.map (w) -> new Weapon(w)
-
-        @checks          or= {}
-
-        # To get animations working
-        @adding = true
-        setTimeout () =>
-            @adding = false
-        , 1000
+        @weapons = @weapons.map (w) -> if w.constructor.name == "Weapon" then w else new Weapon(w)
+        @uuid    = uuid()
 
     damage: (damage=0) ->
         @cur_hit_points -= if damage < 0 then 0 else damage
@@ -119,12 +118,13 @@ class Weapon
         }
 
 
-make_entity = (options={}) ->
-    options.uuid or= uuid()
-    return new Entity(options)
-
-
-app = angular.module('app', [])
+app = angular.module('app', ['ui.sortable'])
+    .factory('debounce', ['$timeout', ($timeout) ->
+        timer = null
+        return (callback, ms) ->
+            $timeout.cancel(timer) if timer
+            timer = $timeout(callback, ms)
+    ])
     .directive 'entity', () ->
         return {
             restrict: "E"
@@ -132,13 +132,10 @@ app = angular.module('app', [])
             scope: {entity: "="}
             templateUrl: "entity.html"
             controller: ($scope, $element, $attrs) ->
-                $($element).draggable(
-                    distance: 10
-                    delay: 100
-                    zIndex: 100
-                ).on "click", () ->
+                $element.on "click", (e) ->
+                    return if $(e.toElement).is("a.dropdown-toggle, a > i, a > b, ul.dropdown-menu li, ul.dropdown-menu li > a")
                     $scope.$apply (scope) ->
-                        scope.$parent.set_combatant(scope.entity)
+                        scope.$root.set_combatant(scope.entity)
                 
                 $scope.hit_point_color = () ->
                     hp = $scope.entity.cur_hit_points
@@ -166,58 +163,32 @@ app = angular.module('app', [])
                     $scope.entity.weapons.push(new Weapon())
                 $scope.fix_hit_dice = (weapon) ->
                     weapon.hit_dice = "1d20+" + weapon.attack_bonus
-                    console.log weapon.hit_dice
         }
-    .controller 'MainController', ['$scope', '$timeout', ($scope, $timeout) ->
-        $scope.entities = []
-        $scope.results = []
-        $scope.ruleset = "d&d"
-        $scope.attack_options = {}
-        $scope.saved_checks = []
-        $scope.current_check = {}
-        entity_counter = 0
-
-        $scope.angular = angular
-
-
-        $scope.save = () ->
-            blob = new Blob([angular.toJson($scope.entities)], {type: "application/json;charset=utf-8"})
-            saveAs(blob, "rpg.json")
-
-
-        $scope.load = () ->
-            $("#load_file").trigger("click")
-            return
-
-
-        $("#load_file").on "change", () ->
-            file = @files[0]
-            return unless file
-
-            reader = new FileReader()
-            reader.readAsText(file, "UTF-8")
-
-            reader.onload = (evt) ->
-                entities = JSON.parse(evt.target.result)
-                entities.map (e) ->
-                    ent = make_entity(e)
-                    $scope.$apply (scope) -> scope.entities.push(ent)
-
-            reader.onerror = (evt) ->
-                console.error "error loading file"
-
-        # Focus on the proper thing when the modal is shown
-        $("#attack_modal").on "shown", () ->
-            setTimeout () ->
-                $("#attack_modal input[name='custom_roll']").focus()
-            , 1
-
-        $scope.save_check = (check) ->
-            for c, i in $scope.saved_checks
-                if c.name == check.name
-                    $scope.saved_checks[i] = check
-                    return
-            $scope.saved_checks.push(angular.extend({}, check))
+    .controller 'MainController', ['$rootScope', '$timeout', ($scope, $timeout) ->
+        $scope.entities = [
+            name: "Players"
+            members: []
+        ,
+            name: "Enemies"
+            members: []
+        ,
+            name: "NPCs"
+            members: []
+        ]
+        entity_counter         = 0
+        $scope.angular         = angular
+        $scope.ruleset         = "d&d"
+        $scope.check_types     = ['listen', 'spot', 'fortitude', 'reflex', 'will']
+        $scope.results         = []
+        $scope.attack_options  = {}
+        $scope.sortableOptions =
+            connectWith: ".entities"
+            revert: true
+            delay: 100
+            distance: 10
+            start: (event, ui) ->
+                # Kill the click that happens on mouseup
+                $(event.toElement).one 'click', (e) -> e.stopImmediatePropagation()
 
 
         $scope.roll_check = (check) ->
@@ -228,17 +199,50 @@ app = angular.module('app', [])
                 console.log "Rolled ", "1d20+" + (e.checks[check.type] or 0), " and got a ", res
                 check_results.push(roll: res, name: e.name)
             check_results.sort (a, b) -> a.roll < b.roll
-            $scope.results.unshift(type: "check", name: check.name || check.type, checks: check_results)
+            $scope.results.unshift(type: "check", name: check.name || check.type.toTitleCase(), checks: check_results)
 
 
-        $scope.add_entity = () ->
-            ent = make_entity({name: "entity#{ entity_counter++ }"})
-            $scope.entities.push(ent)
-            $scope.editee = ent
+        $scope.make_entity = (options={}) ->
+            e = new Entity(options)
+
+            # To get animations working
+            e.adding = true
+            $timeout () ->
+                e.adding = false
+            , 1000
+            return e
+
+
+        $scope.get_group = (group_name) ->
+            for group in $scope.entities
+                return group if group.name == group_name
+            return null
+
+
+        $scope.extend_entities = (ent_groups) ->
+            for _group in ent_groups
+                group = $scope.get_group(_group.name)
+
+                if group
+                    group.members = group.members.concat(_group.members)
+                else
+                    $scope.entities.push _group
+            return
+
+
+        $scope.add_entity = (group_name="Players") ->
+            ent = $scope.make_entity({name: "entity#{ entity_counter++ }"})
+            $scope.get_group(group_name).members.push(ent)
+            $scope.edit_entity(ent)
 
 
         $scope.edit_entity = ($event, entity) ->
-            $event.stopPropagation()
+            if entity
+                $event.stopPropagation()
+            else
+                entity = $event
+                $event = null
+
             $scope.editee = entity
             $scope.clear_attack()
 
@@ -246,13 +250,19 @@ app = angular.module('app', [])
             return
 
 
-        $scope.remove_entity = ($event, entity) ->
+        $scope.copy_entity = ($event, i, ent) ->
+            e = angular.copy(ent)
+            e.uuid = null
+            $scope.entities[i].members.push($scope.make_entity(e))
+
+
+        $scope.remove_entity = ($event, gi, i, entity) ->
             $event.stopPropagation()
 
             # Cute animation
             entity.removing = true
             $timeout () ->
-                delete $scope.entities.splice($scope.entities.indexOf(entity), 1)
+                delete $scope.entities[gi].members.splice(i, 1)
             , 500
 
 
@@ -309,5 +319,41 @@ app = angular.module('app', [])
         $scope.remove_attack = (result) ->
             result.defender.heal(result.given_damage)
             delete $scope.results.splice($scope.results.indexOf(result), 1)
+
+
+        $scope.save = () ->
+            blob = new Blob([angular.toJson($scope.entities)], {type: "application/json;charset=utf-8"})
+            saveAs(blob, "rpg.json")
+
+
+        $scope.load = () ->
+            $("#load_file").trigger("click")
+            return
+
+
+        $("#load_file").on "change", () ->
+            file = @files[0]
+            return unless file
+
+            reader = new FileReader()
+            reader.readAsText(file, "UTF-8")
+
+            reader.onload = (evt) ->
+                results = JSON.parse(evt.target.result)
+
+                # The new style
+                for group in results
+                    group.members = group.members.map (e) -> return new Entity(e)
+                $scope.$apply (scope) -> scope.extend_entities(results)
+                        
+
+            reader.onerror = (evt) ->
+                console.error "error loading file"
+
+        # Focus on the proper thing when the modal is shown
+        $("#attack_modal").on "shown", () ->
+            setTimeout () ->
+                $("#attack_modal input[name='custom_roll']").focus()
+            , 1
     ]
 

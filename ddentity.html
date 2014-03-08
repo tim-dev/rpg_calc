@@ -64,38 +64,10 @@
 
         <form class="form-horizontal">
 
-          <div class="control-group">
-            <label class="control-label">Listen</label>
+          <div class="control-group" ng-repeat="ct in $root.check_types">
+            <label class="control-label">{{ ct.toTitleCase() }}</label>
             <div class="controls">
-              <input type="text" class="input-small" ng-model="entity.checks.listen"></input>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label class="control-label">Spot</label>
-            <div class="controls">
-              <input type="text" class="input-small" ng-model="entity.checks.spot"></input>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label class="control-label">Fortitude</label>
-            <div class="controls">
-              <input type="text" class="input-small" ng-model="entity.checks.fortitude"></input>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label class="control-label">Reflex</label>
-            <div class="controls">
-              <input type="text" class="input-small" ng-model="entity.checks.reflex"></input>
-            </div>
-          </div>
-
-          <div class="control-group">
-            <label class="control-label">Will</label>
-            <div class="controls">
-              <input type="text" class="input-small" ng-model="entity.checks.will"></input>
+              <input type="text" class="input-small" ng-model="entity.checks[ct]"></input>
             </div>
           </div>
 

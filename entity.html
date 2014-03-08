@@ -1,30 +1,59 @@
 <div 
-  class="pull-left entity-small animated {{ hit_point_color() }}" 
+  class="entity-small animated {{ hit_point_color() }}" 
   style="background-size: {{ entity.cur_hit_points / entity.max_hit_points * 100}}% 100% !important"
 >
   {{ entity.name }}
+
   <div class="hp-overlay">
     {{ entity.cur_hit_points }} / {{ entity.max_hit_points }}
   </div>
-  <div class="actions">
-    <i ng-click="$parent.edit_entity($event, entity)" class="fa fa-lg fa-wrench"></i>
-    <i class="fa fa-times" ng-click="$parent.remove_entity($event, entity)"></i>
+
+  <div class="dropdown actions">
+
+    <a 
+      class="dropdown-toggle" 
+      data-toggle="dropdown" 
+      id="dActions" 
+      href="#"
+    >
+      <i class="fa fa-chevron-down"></i>
+    </a>
+
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dActions">
+
+      <li>
+        <a href="#" ng-click="$root.edit_entity($event, entity)">
+          <i class="fa fa-fw fa-pencil"></i> Edit
+        </a>
+      </li>
+
+      <li>
+        <a href="#" ng-click="$root.copy_entity($event, group_index, entity)">
+          <i class="fa fa-fw fa-files-o"></i> Copy
+        </a>
+      </li>
+
+      <li>
+        <a href="#" ng-click="$root.remove_entity($event, group_index, $index, entity)">
+          <i class="fa fa-fw fa-trash-o"></i> Delete
+        </a>
+      </li>
+
+      <li class="dropdown-submenu">
+
+        <a tabindex="-1" href="#">
+          <i class="fa fa-fw fa-exclamation"></i> Checks...
+        </a>
+
+        <ul class="dropdown-menu">
+          <li ng-repeat="ct in $root.check_types">
+            <a href="#" ng-click="$root.roll_check({type: ct, entities: [entity]})">{{ ct.toTitleCase() }}</a>
+          </li>
+        </ul>
+
+      </li>
+
+    </ul>
+
   </div>
-  <!--
-  <div class="header">
-    <div class="pull-right"><i class="fa fa-times" ng-click="$parent.remove_entity($event, entity)"></i></div>
-    {{ entity.name }}
-  </div>
-  <div>HP: 
-    <span class="{{ hit_point_color() }}">{{ entity.cur_hit_points }}</span>
-    / {{ entity.max_hit_points }}
-  </div>
-  <div>AC: {{ entity.armor_class }}</div>
-  <div>
-    <div class="pull-right" style="margin-right:-0.5em;">
-      <i ng-click="$parent.edit_entity($event, entity)" class="fa fa-lg fa-wrench"></i>
-    </div>
-    DR: {{ entity.armor_reduction }}
-  </div>
-  -->
 </div>
