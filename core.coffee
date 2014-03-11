@@ -129,7 +129,7 @@ app = angular.module('app', ['ui.sortable'])
         return {
             restrict: "E"
             replace: true
-            scope: {entity: "="}
+            scope: false
             templateUrl: "entity.html"
             controller: ($scope, $element, $attrs) ->
                 $element.on "click", (e) ->

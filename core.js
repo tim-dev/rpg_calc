@@ -177,9 +177,7 @@
     return {
       restrict: "E",
       replace: true,
-      scope: {
-        entity: "="
-      },
+      scope: false,
       templateUrl: "entity.html",
       controller: function($scope, $element, $attrs) {
         $element.on("click", function(e) {
