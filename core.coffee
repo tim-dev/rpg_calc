@@ -9,22 +9,24 @@ uuid = () ->
         return v.toString(16)
 
 
-roll_dice = (roll_string) ->
+window.roll_dice = (roll_string) ->
     ###
     Example roll strings:
     1d6
     1d8 + 8
+    1d4 - 1
     1d8 + 2d4 + 3
     ###
     
     # TODO more operations!
-    dice_parts = roll_string.split(/\ *\+\ */g)
+    dice_parts = roll_string.match(/.+?(?=[+-]|$)/g)
+    #dice_parts = roll_string.split(/\ *\+\ */g)
 
     roll = 0
     roll_parts = []
     for dice in dice_parts
         roll_part = _roll_die(dice)
-        roll_parts.push("#{ dice } - #{ roll_part }", )
+        roll_parts.push("#{ dice } => #{ roll_part }", )
         roll += roll_part
     console.log "Rolled a #{ roll_string }, parts were #{ roll_parts }"
 
@@ -39,12 +41,11 @@ _roll_die = (dice) ->
     [num, die] = dice.split("d")
     num = parseInt(num)
     die = parseInt(die)
-    i = total = 0
-    while i < num
+    total = 0
+    for i in [0...num]
         roll = Math.ceil(Math.random() * die)
         total += roll
-        i++
-    return total
+    return if num < 0 then total * -1 else total
 
 
 class Entity
