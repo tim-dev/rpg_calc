@@ -14,8 +14,8 @@
 <script src="core.js"></script>
 </head>
 <body ng-controller="MainController" ng-class="{ crosshair: attacker }">
-  <!-- 
-  HEADER 
+  <!--
+  HEADER
   -->
   <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
@@ -34,21 +34,21 @@
       </div>
     </div>
   </div>
-  <!-- 
+  <!--
   ==============================
-  ATTACK MODAL 
+  ATTACK MODAL
   ==============================
   &#10518; - Arrow
   &#9876; - Swords
   -->
 
   <div class="modal hide fade" id="attack_modal">
-    
+
     <div class="modal-header">
-      <button 
-        type="button" 
-        class="close" 
-        data-dismiss="modal" 
+      <button
+        type="button"
+        class="close"
+        data-dismiss="modal"
         aria-hidden="true">
       &times;
       </button>
@@ -57,22 +57,22 @@
 
     <form ng-submit="do_attack()">
     <div class="modal-body">
-      <select 
+      <select
         ng-model="attacker.chosen_weapon"
         ng-options="weapon.name for weapon in attacker.weapons">
       </select>
       <p>All this information is optional</p>
         <label>Roll</label>
-        <input 
+        <input
           name="custom_roll"
-          type="number" 
-          class="input-small" 
+          type="number"
+          class="input-small"
           ng-model="attack_options.roll">
         </input>
         <label>Temp attack modifier</label>
-        <input 
-          type="number" 
-          class="input-small" 
+        <input
+          type="number"
+          class="input-small"
           ng-model="attack_options.hit_modifier">
         </input>
         <!--
@@ -87,9 +87,9 @@
     </form>
   </div>
 
-  <!-- 
+  <!--
   ==============================
-  ENTITY MODAL 
+  ENTITY MODAL
   ==============================
   -->
   <ddentity entity="editee" ng-if="ruleset == 'd&d'"></ddentity>
@@ -102,16 +102,16 @@
     <div class="column" ng-repeat="group in entities" style="width: {{ 100 / (entities.length + 1) }}%" ng-init="group_index = $index">
       <h4>
         {{ group.name }}
-      
+
         <!--
         GROUP ACTIONS
         -->
         <div class="dropdown">
 
-          <a 
-            class="dropdown-toggle" 
-            data-toggle="dropdown" 
-            id="dGroupActions" 
+          <a
+            class="dropdown-toggle"
+            data-toggle="dropdown"
+            id="dGroupActions"
             href="#"
           >
             <i class="fa fa-chevron-circle-down"></i>
@@ -142,13 +142,13 @@
           </ul>
         </div>
       </h4>
-        
+
 
       <div class="entities" ng-model="group.members" ui-sortable="sortableOptions">
-        <entity 
-          ng-repeat="entity in group.members" 
+        <entity
+          ng-repeat="entity in group.members"
           entity="entity"
-          ng-class="{ slideInDown: entity.adding, slideOutUp: entity.removing, active: entity.uuid == attacker.uuid }" 
+          ng-class="{ slideInDown: entity.adding, slideOutUp: entity.removing, active: entity.uuid == attacker.uuid }"
         ></entity>
       </div>
 
@@ -161,8 +161,11 @@
 
           <div ng-switch-when="attack">
             <div ng-switch on="result.hit">
-              <i class="fa fa-times" ng-click="remove_attack(result)"></i> {{ result.attacker.name }} attacked {{ result.defender.name }}, 
-              <span ng-switch-when="true">hit and did {{ result.given_damage }} damage</span>
+              <i class="fa fa-times" ng-click="remove_attack(result)"></i> {{ result.attacker.name }} attacked {{ result.defender.name }},
+              <span ng-switch-when="true">
+                <span ng-if="result.crit">critically </span>
+                hit and did {{ result.given_damage }} damage
+              </span>
               <span ng-switch-default>but missed</span>
             </div>
           </div>

@@ -8,6 +8,9 @@ uuid = () ->
         v = if c == 'x' then r else r&0x3 or 0x8
         return v.toString(16)
 
+remove_spaces = (txt) ->
+    return '' unless txt
+    txt.replace(/\s/g, '')
 
 window.roll_dice = (roll_string) ->
     ###
@@ -17,7 +20,7 @@ window.roll_dice = (roll_string) ->
     1d4 - 1
     1d8 + 2d4 + 3
     ###
-    
+
     # TODO more operations!
     dice_parts = roll_string.match(/.+?(?=[+-]|$)/g)
     #dice_parts = roll_string.split(/\ *\+\ */g)
@@ -35,10 +38,10 @@ window.roll_dice = (roll_string) ->
 
 _roll_die = (dice) ->
     return dice if typeof dice == "int"
-    return parseInt(dice) if dice.indexOf('d') == -1
+    return parseInt(dice) if dice.indexOf(/d/i) == -1
 
     # TODO Bonus dice!
-    [num, die] = dice.split("d")
+    [num, die] = dice.split(/d/i)
     num = parseInt(num)
     die = parseInt(die)
     total = 0
@@ -49,7 +52,7 @@ _roll_die = (dice) ->
 
 
 class Entity
-    @default_options =
+    @defaults =
         name            : "New entity"
         cur_hit_points  : 10
         max_hit_points  : 10
@@ -61,7 +64,7 @@ class Entity
         checks          : {}
 
     constructor: (options={}) ->
-        for k, v of angular.extend({}, Entity.default_options, options)
+        for k, v of angular.extend({}, Entity.defaults, options)
             this[k] = v
 
         @weapons = @weapons.map (w) -> if w.constructor.name == "Weapon" then w else new Weapon(w)
@@ -75,43 +78,63 @@ class Entity
 
 
 class Weapon
+    @defaults =
+        hit_dice: "1d20"
+        critical: "x2"
+        attack_bonus: "0"
+        #damage: "1d6"
 
     constructor: (options={}) ->
-        for k, v of options
-            this[k] = v
+        angular.extend(this, Weapon.defaults, options)
 
+        # Temp fix for old style
+        if @hit_dice
+            dice = remove_spaces(@hit_dice).match(/1d20(?:\s*[+-]\s*)(\d+)?/i)
+            if dice
+                @hit_dice = "1d20"
+                @attack_bonus = dice[1]
 
     attack: (defender, options={}) ->
-        # TODO Criticals!
+        # Sanitize options
+        options.roll
+        options.hit_modifier
+
         # Roll dice
-        if options.roll
-            roll = parseInt(options.roll)
+        roll = if options.roll then parseInt(options.roll) else roll_dice(@hit_dice)
+        return alert("Invalid roll: #{ options.roll }") if isNaN(roll)
 
-            # Parse the bonus from the hit dice
-            bonus = /\ *[+-]\d(?!n)/.exec(@hit_dice)
-            roll += parseInt(bonus[0]) if bonus
-        else
-            roll = roll_dice(@hit_dice)
+        # Criticals!
+        crit = false
+        crit_multi = 1
+        if @critical
+            [full, crit_roll, crit_multi] = (@critical or '').match(/(\d+)?(?:\-20)?x(\d)/i)
+            crit_roll = if crit_roll then parseInt(crit_roll) else 20
+            crit = @hit_dice is "1d20" and roll >= crit_roll
+            crit_multi = if crit then parseInt(crit_multi) else 1
 
-        roll += options.hit_modifier or 0
+        # Parse the bonus from the hit dice
+        roll += parseInt(@attack_bonus or 0)
+        roll += parseInt(options.hit_modifier or 0)
 
-        hit = roll > defender.armor_class
+        hit = crit or roll > defender.armor_class
         return { hit: hit, roll: roll } unless hit
 
         # EXTRA STUFF FOR GAME OF THRONES
         degree = 1
         if options.use_degree
             degree = Math.ceil((roll - defender.armor_class) / 5)
-        
+
         # Calculate damage
         base_damage = roll_dice(@damage)
-        given_damage = (degree * base_damage) - defender.armor_reduction
+        given_damage = (degree * base_damage * crit_multi) - defender.armor_reduction
 
         # Apply damage
         defender.damage(given_damage)
-        
+
         return {
             hit: hit
+            crit: crit
+            crit_multi: crit_multi
             roll: roll
             degree: degree
             base_damage: base_damage
@@ -137,7 +160,7 @@ app = angular.module('app', ['ui.sortable'])
                     return if $(e.toElement).is("a.dropdown-toggle, a > i, a > b, ul.dropdown-menu li, ul.dropdown-menu li > a")
                     $scope.$apply (scope) ->
                         scope.$root.set_combatant(scope.entity)
-                
+
                 $scope.hit_point_color = () ->
                     hp = $scope.entity.cur_hit_points
                     if hp < 1
@@ -163,7 +186,7 @@ app = angular.module('app', ['ui.sortable'])
                 $scope.add_weapon = () ->
                     $scope.entity.weapons.push(new Weapon())
                 $scope.fix_hit_dice = (weapon) ->
-                    weapon.hit_dice = "1d20+" + weapon.attack_bonus
+                    weapon.hit_dice = "1d20" #+ weapon.attack_bonus
         }
     .controller 'MainController', ['$rootScope', '$timeout', ($scope, $timeout) ->
         $scope.entities = [
@@ -268,13 +291,12 @@ app = angular.module('app', ['ui.sortable'])
 
 
         $scope.get_attack_options = () ->
+            options = {ruleset: $scope.ruleset}
             switch $scope.ruleset
-                when 'd&d'
-                    return {}
+                #when 'd&d'
                 when 'got'
-                    return { use_degree: true }
-                else
-                    return {}
+                    options.use_degree = true
+            return options
 
 
         $scope.set_combatant = (entity) ->
@@ -346,7 +368,7 @@ app = angular.module('app', ['ui.sortable'])
                 for group in results
                     group.members = group.members.map (e) -> return new Entity(e)
                 $scope.$apply (scope) -> scope.extend_entities(results)
-                        
+
 
             reader.onerror = (evt) ->
                 console.error "error loading file"
