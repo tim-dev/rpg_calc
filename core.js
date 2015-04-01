@@ -52,7 +52,7 @@
     if (typeof dice === "int") {
       return dice;
     }
-    if (dice.indexOf(/d/i) === -1) {
+    if (!/d/i.test(dice)) {
       return parseInt(dice);
     }
     ref = dice.split(/d/i), num = ref[0], die = ref[1];

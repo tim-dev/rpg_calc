@@ -38,7 +38,7 @@ window.roll_dice = (roll_string) ->
 
 _roll_die = (dice) ->
     return dice if typeof dice == "int"
-    return parseInt(dice) if dice.indexOf(/d/i) == -1
+    return parseInt(dice) unless /d/i.test(dice)
 
     # TODO Bonus dice!
     [num, die] = dice.split(/d/i)
