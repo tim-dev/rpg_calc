@@ -253,6 +253,13 @@ app = angular.module('app', ['ui.sortable'])
                     $scope.entities.push _group
             return
 
+        $scope.heal_all = (members) ->
+            m.cur_hit_points = m.max_hit_points for m in members
+
+        $scope.clear_members = (group) ->
+            return unless confirm "Are you sure you want to delete all the #{ group.name.toLowerCase() }?"
+            group.members = []
+
 
         $scope.add_entity = (group_name="Players") ->
             ent = $scope.make_entity({name: "entity#{ entity_counter++ }"})

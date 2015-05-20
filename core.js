@@ -345,6 +345,21 @@
           }
         }
       };
+      $scope.heal_all = function(members) {
+        var j, len, m, results1;
+        results1 = [];
+        for (j = 0, len = members.length; j < len; j++) {
+          m = members[j];
+          results1.push(m.cur_hit_points = m.max_hit_points);
+        }
+        return results1;
+      };
+      $scope.clear_members = function(group) {
+        if (!confirm("Are you sure you want to delete all the " + (group.name.toLowerCase()) + "?")) {
+          return;
+        }
+        return group.members = [];
+      };
       $scope.add_entity = function(group_name) {
         var ent;
         if (group_name == null) {

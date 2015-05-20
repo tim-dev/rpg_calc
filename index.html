@@ -2,7 +2,7 @@
 <html lang="en" ng-app="app">
 <head>
 <link rel="stylesheet" href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" />
-<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" >
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.css" >
 <link rel="stylesheet" href="external/animate.min.css" />
 <link rel="stylesheet" href="core.css" />
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
@@ -122,6 +122,18 @@
             <li>
               <a href="#" ng-click="add_entity(group.name)">
                 <i class="fa fa-fw fa-plus"></i> Add new
+              </a>
+            </li>
+
+            <li>
+              <a href="#" ng-click="$root.heal_all(group.members)">
+                <i class="fa fa-heartbeat"></i> Heal
+              </a>
+            </li>
+
+            <li>
+            <a href="#" ng-click="$root.clear_members(group)">
+                <i class="fa fa-trash"></i> Delete
               </a>
             </li>
 
