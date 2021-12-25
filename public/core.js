@@ -207,7 +207,7 @@
       restrict: "E",
       replace: true,
       scope: false,
-      templateUrl: "entity.html",
+      templateUrl: "public/entity.html",
       controller: function($scope, $element, $attrs) {
         $element.on("click", function(e) {
           if ($(e.toElement).is("a.dropdown-toggle, a > i, a > b, ul.dropdown-menu li, ul.dropdown-menu li > a")) {
@@ -236,7 +236,7 @@
       scope: {
         entity: "="
       },
-      templateUrl: "entity_basics.html"
+      templateUrl: "public/entity_basics.html"
     };
   }).directive('ddentity', function() {
     return {
@@ -245,7 +245,7 @@
       scope: {
         entity: "="
       },
-      templateUrl: "ddentity.html",
+      templateUrl: "public/ddentity.html",
       controller: function($scope, $element, $attrs) {
         $scope.add_weapon = function() {
           return $scope.entity.weapons.push(new Weapon());
